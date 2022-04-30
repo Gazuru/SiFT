@@ -21,7 +21,8 @@ def run_client(host, port):
             
             s.connect((host, port))
             logged_in = False
-            
+            state = 0
+
             while True :
                 try:
                     if not logged_in:
@@ -33,6 +34,16 @@ def run_client(host, port):
                             break
                         print("Login succesful!")
                     else:
+                        if state == 0:
+                            #TODO command
+                            pass
+                        elif state == 1:
+                            #TODO upload
+                            pass
+                        elif state == 2:
+                            #TODO download
+                            pass
+
                         message = input()
                         if message =="exit":
                             break

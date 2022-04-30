@@ -14,6 +14,7 @@ def on_new_client(conn, addr, number):
         f.write("sqn: 0\n")
     
     logged_in = False
+    state = 0
 
     while True:
         if not logged_in:
@@ -25,6 +26,16 @@ def on_new_client(conn, addr, number):
                 break
             print("Waiting for commands from " + str(addr) + "!")
         else:
+            if state == 0:
+                #TODO command
+                pass
+            elif state == 1:
+                #TODO upload
+                pass
+            elif state == 2:
+                #TODO download
+                pass
+
             data = conn.recv(2048)
             if data == b'':
                 break
