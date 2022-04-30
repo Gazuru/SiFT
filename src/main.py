@@ -3,7 +3,6 @@ import argparse
 import client
 import server
 
-
 def parse_mode():
     parser = argparse.ArgumentParser()
 

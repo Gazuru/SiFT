@@ -1,28 +1,56 @@
 import socket
+import os
 
 from MTP import decrypt, encrypt
+from getpass import getpass
 
+from login import login_client, login_req
 
 def run_client(host, port):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((host, port))
-        while True:
-            message = input()
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            with open("client/number.txt", "r") as f:
+                number = int(f.readline(), base=10)
+            with open("client/number.txt", "w") as f:
+                f.write(str(number+1))
 
-            if message == "exit":
-                break
+            with open("client/rcvstate" + str(number) + ".txt", "w") as f:
+                f.write("sqn: 0\n")
+            with open("client/sndstate" + str(number) + ".txt", "w") as f:
+                f.write("sqn: 0\n")
+            
+            s.connect((host, port))
+            logged_in = False
+            
+            while True :
+                try:
+                    if not logged_in:
+                        message = login_client(s, number)
 
-            data = encrypt(message.encode('utf-8'), b'\x00\x10',"client/sndstate.txt")
-            s.sendall(data)
-            data = s.recv(4096)
+                        if message:
+                            logged_in = True
+                        else:
+                            break
+                        print("Login succesful!")
+                    else:
+                        message = input()
+                        if message =="exit":
+                            break
+                        s.sendall(encrypt(message.encode('utf-8'), b'\x00\x20', "client", str(number)))
+                        data = s.recv(2048)
+                        data = decrypt(data, "client", str(number))
+                        if data == 0:
+                            break
 
-            data = decrypt(data, b'\x00\x10', "client/rcvstate.txt")
-            if data == 0:
-                break
+                        print(f"Received {data!r}")
 
-            print(f"Received {data!r}")
-
-
-
-        #sndstate.txt
-        #rcvstate.txt
+                except socket.error as e:
+                    break
+            os.remove("client/rcvstate" + str(number) + ".txt")
+            os.remove("client/sndstate" + str(number) + ".txt")
+                
+    except KeyboardInterrupt as e:
+        os.remove("client/rcvstate" + str(number) + ".txt")
+        os.remove("client/sndstate" + str(number) + ".txt")
+        s.close()
+        s = None

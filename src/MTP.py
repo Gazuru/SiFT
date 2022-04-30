@@ -21,15 +21,18 @@ def load_keypair(privkeyfile):
         print('Error: Cannot import private key from file ' + privkeyfile)
         sys.exit(1)
 
-def encrypt(payload, type, statefile):
+def encrypt(payload, type, state, number):
+    statefile = state + '/sndstate' + number + '.txt'
+
     login = False
-    if type == b'\x00\x00' or type == b'\x00\x10':
+    if type == b'\x00\x00':
         login = True
 
     # read the content of the state file
     with open(statefile, 'rt') as sf:
-        key = bytes.fromhex(sf.readline()[len("key: "):len("key: ")+32]) # type should be byte string
         sqn = int(sf.readline()[len("sqn: "):], base=10) # type should be integer
+        if not login:
+            key = bytes.fromhex(sf.readline()[len("key: "):len("key: ")+64]) # type should be byte string
 
     # compute payload_length and set authtag_length
     payload_length = len(payload)
@@ -48,6 +51,7 @@ def encrypt(payload, type, statefile):
 
     #login
     if login:
+        statefile2 = state + '/rcvstate' + number + '.txt'
         pubkeyfile = "client/pubkey.pem"
         key = Random.get_random_bytes(32)
         msg_length += 256
@@ -73,8 +77,12 @@ def encrypt(payload, type, statefile):
     encrypted_payload, authtag = AE.encrypt_and_digest(payload)
 
     # save state
-    state =  "key: " + key.hex() + '\n'
-    state += "sqn: " + str(sqn + 1)
+    state = "sqn: " + str(sqn + 1) + '\n'
+    if not login:
+        state +=  "key: " + key.hex()
+    else:
+        with open(statefile2, 'a') as sf:
+            sf.write("key: " + key.hex())
     with open(statefile, 'wt') as sf:
         sf.write(state)
 
@@ -83,25 +91,13 @@ def encrypt(payload, type, statefile):
     else:
         return (header + encrypted_payload + authtag)
 
-def decrypt(msg, type, statefile):
-    login = False
-    if type == b'\x00\x00' or type == b'\x00\x10':
-        login = True
+def decrypt(msg, state, number):
+    statefile = state + '/rcvstate' + number + '.txt'
 
-    # read the content of the state file
-    with open(statefile, 'rt') as sf:
-        key = bytes.fromhex(sf.readline()[len("key: "):len("key: ")+32]) # type should be byte string
-        rcvsqn = int(sf.readline()[len("sqn: "):], base=10) # type should be integer
+    login_req = False
 
     # parse the message msg
     header = msg[0:16]                # header is 16 bytes long
-    if login:
-        etk = msg[-256:]
-        authtag = msg[-268:-256]
-        encrypted_payload = msg[16:-268]
-    else:
-        authtag = msg[-12:]               # last 12 bytes is the authtag
-        encrypted_payload = msg[16:-12]   # encrypted payload is between header and authtag
     header_ver = header[0:2]          # version is encoded on 2 bytes 
     header_typ = header[2:4]          # type is encoded on 2 bytes
     header_len = header[4:6]          # msg length is encoded on 2 bytes 
@@ -109,12 +105,32 @@ def decrypt(msg, type, statefile):
     header_rnd = header[8:14]         # random is encoded on 6 bytes 
     header_rsv = header[14:16]        # rsv is encoded on 2 bytes
 
+    if header_typ == b'\x00\x00':
+        login_req = True
+
+    if login_req:
+        etk = msg[-256:]
+        authtag = msg[-268:-256]
+        encrypted_payload = msg[16:-268]
+        statefile2 = state + '/sndstate' + number + '.txt'
+    else:
+        authtag = msg[-12:]               # last 12 bytes is the authtag
+        encrypted_payload = msg[16:-12]   # encrypted payload is between header and authtag
+
+    # read the content of the state file
+    with open(statefile, 'rt') as sf:
+        rcvsqn = int(sf.readline()[len("sqn: "):], base=10) # type should be integer
+        if not login_req :
+            key = bytes.fromhex(sf.readline()[len("key: "):len("key: ")+64]) # type should be byte string
+
     # check the sequence number
     sndsqn = int.from_bytes(header_sqn, byteorder='big')
+    print("Send: " + str(sndsqn))
+    print("Recieve: " + str(rcvsqn))
     if (sndsqn <= rcvsqn):
         return 0 
 
-    if login:
+    if login_req:
         privkeyfile = 'server/keypair.pem'
         keypair = load_keypair(privkeyfile)
         RSAcipher = PKCS1_OAEP.new(keypair)
@@ -130,8 +146,13 @@ def decrypt(msg, type, statefile):
         return 0
 
     # save state
-    state =  "key: " + key.hex() + '\n'
-    state += "sqn: " + str(sndsqn)
+    state = "sqn: " + str(sndsqn) + '\n'
+    if not login_req:
+        state +=  "key: " + key.hex()
+    else:
+        with open(statefile2, 'a') as sf:
+            key = "key: " + key.hex()
+            sf.write(key)
     with open(statefile, 'wt') as sf:
         sf.write(state)
 
