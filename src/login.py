@@ -4,7 +4,7 @@ from Crypto.Protocol.KDF import PBKDF2, HKDF
 from Crypto.Hash import SHA512, SHA256
 from Crypto import Random
 
-from MTP import decrypt, encrypt
+from MTP import LOGIN_REQ, LOGIN_RES, decrypt, encrypt
 
 def create_hash(username, password):
     salt = Random.get_random_bytes(16)
@@ -65,7 +65,7 @@ def login_client(socket, number):
     password = getpass("Password: ")   
 
     message = login_req(username, password).encode('utf-8')
-    data = encrypt(message, b'\x00\x00', "client", str(number))
+    data = encrypt(message, LOGIN_REQ, "client", str(number))
     socket.sendall(data)
 
     SHA = SHA256.new()
@@ -74,7 +74,7 @@ def login_client(socket, number):
 
     data = socket.recv(2048)
 
-    if data[2:4] != b'\x00\x01':
+    if data[2:4] != LOGIN_RES:
         return False
     msg = decrypt(data, "client", str(number))
     if msg == 0:
@@ -106,7 +106,7 @@ def login_client(socket, number):
 def login_server(conn, number):
     data = conn.recv(2048)
 
-    if data[2:4] != b'\x00\x00':
+    if data[2:4] != LOGIN_REQ:
         return False
     msg = decrypt(data, "server", str(number))
     if msg == 0:
@@ -126,7 +126,7 @@ def login_server(conn, number):
 
     message = login_res(msg).encode('utf-8')
 
-    data = encrypt(message, b'\x00\x01', 'server', str(number))
+    data = encrypt(message, LOGIN_RES, 'server', str(number))
     conn.sendall(data)
 
     server_random = bytes.fromhex(message.decode('utf-8').split('\n')[1])
