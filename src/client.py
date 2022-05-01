@@ -9,10 +9,13 @@ from login import login_client, login_req
 def run_client(host, port):
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            with open("client/number.txt", "r") as f:
-                number = int(f.readline(), base=10)
-            with open("client/number.txt", "w") as f:
-                f.write(str(number+1))
+            if os.path.exists("server/number.txt"):
+                with open("server/number.txt", "r") as f:
+                    number = int(f.readline(), base=10)
+                with open("server/number.txt", "w") as f:
+                    f.write(str(number+1))
+            else:
+                number = 0
 
             with open("client/rcvstate" + str(number) + ".txt", "w") as f:
                 f.write("sqn: 0\n")
@@ -22,17 +25,18 @@ def run_client(host, port):
             s.connect((host, port))
             logged_in = False
             state = 0
+            user = None
 
             while True :
                 try:
                     if not logged_in:
-                        message = login_client(s, number)
+                        message, user = login_client(s, number)
 
                         if message:
                             logged_in = True
                         else:
                             break
-                        print("Login succesful!")
+                        print("Login succesful for " + user + "!")
                     else:
                         if state == 0:
                             #TODO command

@@ -137,8 +137,6 @@ def decrypt(msg, state, number):
 
     # check the sequence number
     sndsqn = int.from_bytes(header_sqn, byteorder='big')
-    print("Send: " + str(sndsqn))
-    print("Recieve: " + str(rcvsqn))
     if (sndsqn <= rcvsqn):
         return 0 
 

@@ -101,7 +101,7 @@ def login_client(socket, number):
         state +=  "key: " + key.hex()
         sf.write(state)
 
-    return True
+    return True, username
 
 def login_server(conn, number):
     data = conn.recv(2048)
@@ -143,4 +143,4 @@ def login_server(conn, number):
         state +=  "key: " + key.hex()
         sf.write(state)
 
-    return True
+    return True, user
