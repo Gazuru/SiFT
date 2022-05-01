@@ -3,6 +3,18 @@ from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto import Random
 from Crypto.PublicKey import RSA
 
+#constans
+LOGIN_REQ = b'\x00\x00'
+LOGIN_RES = b'\x00\x10'
+COMMAND_REQ = b'\x01\x00'
+COMMAND_RES = b'\x01\x10'
+UPLOAD_REQ_0 = b'\x02\x00'
+UPLOAD_REQ_1 = b'\x02\x01'
+UPLOAD_RES = b'\x02\x10'
+DOWNLOAD_REQ = b'\x03\x00'
+DOWNLOAD_RES_0 = b'\x03\x10'
+DOWNLOAD_RES_1 = b'\x03\x11'
+
 def load_publickey(pubkeyfile):
     with open(pubkeyfile, 'rb') as f:
         pubkeystr = f.read()
@@ -25,7 +37,7 @@ def encrypt(payload, type, state, number):
     statefile = state + '/sndstate' + number + '.txt'
 
     login = False
-    if type == b'\x00\x00':
+    if type == LOGIN_REQ:
         login = True
 
     # read the content of the state file
@@ -105,7 +117,7 @@ def decrypt(msg, state, number):
     header_rnd = header[8:14]         # random is encoded on 6 bytes 
     header_rsv = header[14:16]        # rsv is encoded on 2 bytes
 
-    if header_typ == b'\x00\x00':
+    if header_typ == LOGIN_REQ:
         login_req = True
 
     if login_req:
