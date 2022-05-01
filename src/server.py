@@ -15,16 +15,17 @@ def on_new_client(conn, addr, number):
     
     logged_in = False
     state = 0
+    user = None
 
     while True:
         if not logged_in:
-            message = login_server(conn, number)
+            message, user = login_server(conn, number)
 
             if message:
                 logged_in = True
             else:
                 break
-            print("Waiting for commands from " + str(addr) + "!")
+            print("Waiting for commands from " + user + " on " + str(addr) + "!")
         else:
             if state == 0:
                 #TODO command
@@ -57,7 +58,7 @@ def on_new_client(conn, addr, number):
 
 def run_server(host, port):
     number = 0
-    with open("client/number.txt", "w") as f:
+    with open("server/number.txt", "w") as f:
         f.write("0")
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -72,8 +73,8 @@ def run_server(host, port):
             if os.path.exists("server/rcvstate" + str(i) + ".txt"):
                 os.remove("server/rcvstate" + str(i) + ".txt")
                 os.remove("server/sndstate" + str(i) + ".txt")
-        os.remove("client/number.txt")
+        os.remove("server/number.txt")
         s = None
     except Exception as e:
-        os.remove("client/number.txt")
+        os.remove("server/number.txt")
 
