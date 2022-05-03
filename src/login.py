@@ -61,7 +61,7 @@ def login_res(message):
 def login_client(socket, number):
     username = input("Username: ")
     if username == "exit":
-        return False, username
+        return False, None
     password = getpass("Password: ")   
 
     message = login_req(username, password).encode('utf-8')
@@ -75,10 +75,10 @@ def login_client(socket, number):
     data = socket.recv(2048)
 
     if data[2:4] != LOGIN_RES:
-        return False, username
+        return False, None
     msg = decrypt(data, "client", str(number))
     if msg == 0:
-        return False, username
+        return False, None
 
     data = msg.decode('utf-8').split('\n')
 
@@ -107,10 +107,10 @@ def login_server(conn, number):
     data = conn.recv(2048)
 
     if data[2:4] != LOGIN_REQ:
-        return False
+        return False, None
     msg = decrypt(data, "server", str(number))
     if msg == 0:
-        return False
+        return False, None
 
     data = msg.decode('utf-8').split('\n')
 
@@ -120,9 +120,9 @@ def login_server(conn, number):
     client_random = bytes.fromhex(data[3])
 
     if not check_user(user, password):
-        return False
+        return False, None
     if not check_timestamp(timestamp):
-        return False
+        return False, None
 
     message = login_res(msg).encode('utf-8')
 
