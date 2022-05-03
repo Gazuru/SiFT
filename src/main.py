@@ -1,4 +1,5 @@
 import argparse
+import socket
 
 import client
 import server
@@ -11,7 +12,7 @@ def parse_mode():
     return parser.parse_args().mode
 
 
-HOST = "127.0.0.1"
+HOST = socket.gethostbyname(socket.gethostname())
 PORT = 5150
 
 
