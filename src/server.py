@@ -2,6 +2,7 @@ import socket
 import _thread
 import os
 from MTP import decrypt, encrypt
+from command import command_server
 
 from login import login_server 
 
@@ -28,8 +29,11 @@ def on_new_client(conn, addr, number):
             print("Waiting for commands from " + user + " on " + str(addr) + "!")
         else:
             if state == 0:
-                #TODO command
-                pass
+                state, message = command_server(conn, number, user)
+                            
+                if state == -1:
+                    break
+
             elif state == 1:
                 #TODO upload
                 pass
@@ -37,6 +41,7 @@ def on_new_client(conn, addr, number):
                 #TODO download
                 pass
 
+            """
             data = conn.recv(2048)
             if data == b'':
                 break
@@ -50,6 +55,7 @@ def on_new_client(conn, addr, number):
             data = encrypt(data, b'\x00\x20',"server", str(number))
 
             conn.sendall(data)
+            """
     
     print(f"Disconnected {addr}")
     os.remove("server/rcvstate" + str(number) + ".txt")

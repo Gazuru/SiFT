@@ -86,7 +86,7 @@ def login_client(socket, number):
     server_random = bytes.fromhex(data[1])
 
     if request_hash != hash:
-        return False, username
+        return False, None
 
     client_random = bytes.fromhex(message.decode('utf-8').split('\n')[3])
 
