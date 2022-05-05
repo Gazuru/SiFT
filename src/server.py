@@ -17,10 +17,12 @@ def on_new_client(conn, addr, number):
     logged_in = False
     state = 0
     user = None
+    current_dir = None
 
     while True:
         if not logged_in:
             message, user = login_server(conn, number)
+            current_dir = "/home/" + user
 
             if message:
                 logged_in = True
@@ -29,7 +31,7 @@ def on_new_client(conn, addr, number):
             print("Waiting for commands from " + user + " on " + str(addr) + "!")
         else:
             if state == 0:
-                state, message = command_server(conn, number, user)
+                state, current_dir = command_server(conn, number, user, current_dir)
                             
                 if state == -1:
                     break

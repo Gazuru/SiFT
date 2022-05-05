@@ -41,9 +41,11 @@ def run_client(host, port):
                     else:
                         if state == 0:
                             state, message = command_client(s, number, user)
-                            
+
                             if state == -1:
                                 break
+                            else:
+                                print(message)
                         elif state == 1:
                             #TODO upload
                             pass
