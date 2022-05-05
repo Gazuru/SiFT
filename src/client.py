@@ -3,6 +3,7 @@ import os
 
 from MTP import decrypt, encrypt
 from getpass import getpass
+from command import command_client
 
 from login import login_client, login_req
 
@@ -30,24 +31,26 @@ def run_client(host, port):
             while True :
                 try:
                     if not logged_in:
-                        message, user = login_client(s, number)
+                        success, user = login_client(s, number)
 
-                        if message:
+                        if success:
                             logged_in = True
                         else:
                             break
                         print("Login succesful for " + user + "!")
                     else:
                         if state == 0:
-                            #TODO command
-                            pass
+                            state, message = command_client(s, number, user)
+                            
+                            if state == -1:
+                                break
                         elif state == 1:
                             #TODO upload
                             pass
                         elif state == 2:
                             #TODO download
                             pass
-
+                        """
                         message = input()
                         if message =="exit":
                             break
@@ -58,6 +61,7 @@ def run_client(host, port):
                             break
 
                         print(f"Received {data!r}")
+                        """
 
                 except socket.error as e:
                     break
