@@ -44,7 +44,7 @@ def run_client(host, port):
 
                             if state == -1:
                                 break
-                            else:
+                            if message != None:
                                 print(message)
                         elif state == 1:
                             #TODO upload
