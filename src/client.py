@@ -1,11 +1,11 @@
-import socket
 import os
+import socket
+from getpass import getpass
 
 from MTP import decrypt, encrypt
-from getpass import getpass
 from command import command_client
-
 from login import login_client, login_req
+
 
 def run_client(host, port):
     try:
@@ -14,7 +14,7 @@ def run_client(host, port):
                 with open("server/number.txt", "r") as f:
                     number = int(f.readline(), base=10)
                 with open("server/number.txt", "w") as f:
-                    f.write(str(number+1))
+                    f.write(str(number + 1))
             else:
                 number = 0
 
@@ -22,13 +22,13 @@ def run_client(host, port):
                 f.write("sqn: 0\n")
             with open("client/sndstate" + str(number) + ".txt", "w") as f:
                 f.write("sqn: 0\n")
-            
+
             s.connect((host, port))
             logged_in = False
             state = 0
             user = None
 
-            while True :
+            while True:
                 try:
                     if not logged_in:
                         success, user = login_client(s, number)
@@ -47,10 +47,10 @@ def run_client(host, port):
                             if message != None:
                                 print(message)
                         elif state == 1:
-                            #TODO upload
+                            # TODO upload
                             pass
                         elif state == 2:
-                            #TODO download
+                            # TODO download
                             pass
                         """
                         message = input()
@@ -69,7 +69,7 @@ def run_client(host, port):
                     break
             os.remove("client/rcvstate" + str(number) + ".txt")
             os.remove("client/sndstate" + str(number) + ".txt")
-                
+
     except KeyboardInterrupt as e:
         os.remove("client/rcvstate" + str(number) + ".txt")
         os.remove("client/sndstate" + str(number) + ".txt")

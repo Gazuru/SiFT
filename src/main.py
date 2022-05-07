@@ -1,8 +1,8 @@
 import argparse
-import socket
 
 import client
 import server
+
 
 def parse_mode():
     parser = argparse.ArgumentParser()
@@ -12,16 +12,13 @@ def parse_mode():
     return parser.parse_args().mode
 
 
-HOST = socket.gethostbyname(socket.gethostname())
+HOST = "INSERT IP"
 PORT = 5150
-
 
 if __name__ == '__main__':
     mode = parse_mode()
 
     if mode == "server":
-        server.run_server(HOST, PORT)
+        server.run_server(PORT)
     elif mode == "client":
         client.run_client(HOST, PORT)
-
-

@@ -1,17 +1,20 @@
-from getpass import getpass
 import time
-from Crypto.Protocol.KDF import PBKDF2, HKDF
-from Crypto.Hash import SHA512, SHA256
+from getpass import getpass
+
 from Crypto import Random
+from Crypto.Hash import SHA512, SHA256
+from Crypto.Protocol.KDF import PBKDF2, HKDF
 
 from MTP import LOGIN_REQ, LOGIN_RES, decrypt, encrypt
+
 
 def create_hash(username, password):
     salt = Random.get_random_bytes(16)
     hash = PBKDF2(password, salt, 64, count=1000000, hmac_hash_module=SHA512)
     with open('server/shadow.txt', 'a') as f:
-        line =  username + ':$6$' + salt.hex() + '$' + hash.hex() + '\n'
+        line = username + ':$6$' + salt.hex() + '$' + hash.hex() + '\n'
         f.write(line)
+
 
 def check_user(username, password):
     with open('server/shadow.txt', 'rt') as f:
@@ -25,6 +28,7 @@ def check_user(username, password):
                     return True
         return False
 
+
 def check_timestamp(timestamp):
     current_time = time.time_ns()
 
@@ -35,6 +39,7 @@ def check_timestamp(timestamp):
     else:
         return True
 
+
 def login_req(username, password):
     timestamp = time.time_ns()
     client_random = Random.get_random_bytes(16)
@@ -43,8 +48,9 @@ def login_req(username, password):
     message += username + '\n'
     message += password + '\n'
     message += client_random.hex()
-    
+
     return message
+
 
 def login_res(message):
     SHA = SHA256.new()
@@ -58,11 +64,12 @@ def login_res(message):
 
     return message
 
+
 def login_client(socket, number):
     username = input("Username: ")
     if username == "exit":
         return False, None
-    password = getpass("Password: ")   
+    password = getpass("Password: ")
 
     message = login_req(username, password).encode('utf-8')
     data = encrypt(message, LOGIN_REQ, "client", str(number))
@@ -98,10 +105,11 @@ def login_client(socket, number):
         sqn = int(sf.readline()[len("sqn: "):], base=10)
     with open("client/rcvstate" + str(number) + ".txt", 'wt') as sf:
         state = "sqn: " + str(sqn) + '\n'
-        state +=  "key: " + key.hex()
+        state += "key: " + key.hex()
         sf.write(state)
 
     return True, username
+
 
 def login_server(conn, number):
     data = conn.recv(2048)
@@ -140,7 +148,7 @@ def login_server(conn, number):
         sqn = int(sf.readline()[len("sqn: "):], base=10)
     with open("server/sndstate" + str(number) + ".txt", 'wt') as sf:
         state = "sqn: " + str(sqn) + '\n'
-        state +=  "key: " + key.hex()
+        state += "key: " + key.hex()
         sf.write(state)
 
     return True, user

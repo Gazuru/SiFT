@@ -1,9 +1,10 @@
 import sys
-from Crypto.Cipher import AES, PKCS1_OAEP
+
 from Crypto import Random
+from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.PublicKey import RSA
 
-#constans
+# constans
 LOGIN_REQ = b'\x00\x00'
 LOGIN_RES = b'\x00\x10'
 COMMAND_REQ = b'\x01\x00'
@@ -15,6 +16,7 @@ DOWNLOAD_REQ = b'\x03\x00'
 DOWNLOAD_RES_0 = b'\x03\x10'
 DOWNLOAD_RES_1 = b'\x03\x11'
 
+
 def load_publickey(pubkeyfile):
     with open(pubkeyfile, 'rb') as f:
         pubkeystr = f.read()
@@ -23,6 +25,7 @@ def load_publickey(pubkeyfile):
     except ValueError:
         print('Error: Cannot import public key from file ' + pubkeyfile)
         sys.exit(1)
+
 
 def load_keypair(privkeyfile):
     with open(privkeyfile, 'rb') as f:
@@ -33,6 +36,7 @@ def load_keypair(privkeyfile):
         print('Error: Cannot import private key from file ' + privkeyfile)
         sys.exit(1)
 
+
 def encrypt(payload, type, state, number):
     statefile = state + '/sndstate' + number + '.txt'
 
@@ -42,13 +46,13 @@ def encrypt(payload, type, state, number):
 
     # read the content of the state file
     with open(statefile, 'rt') as sf:
-        sqn = int(sf.readline()[len("sqn: "):], base=10) # type should be integer
+        sqn = int(sf.readline()[len("sqn: "):], base=10)  # type should be integer
         if not login:
-            key = bytes.fromhex(sf.readline()[len("key: "):len("key: ")+64]) # type should be byte string
+            key = bytes.fromhex(sf.readline()[len("key: "):len("key: ") + 64])  # type should be byte string
 
     # compute payload_length and set authtag_length
     payload_length = len(payload)
-    authtag_length = 12 # we'd like to use a 12-byte long authentication tag 
+    authtag_length = 12  # we'd like to use a 12-byte long authentication tag
 
     # compute message length...
     # header: 16 bytes
@@ -56,12 +60,12 @@ def encrypt(payload, type, state, number):
     #    type:    1 btye
     #    length:  2 btyes
     #    sqn:     4 bytes
-    #.   rnd:     7 bytes
+    # .   rnd:     7 bytes
     # payload: payload_length
     # authtag: authtag_length
     msg_length = 16 + payload_length + authtag_length
 
-    #login
+    # login
     if login:
         statefile2 = state + '/rcvstate' + number + '.txt'
         pubkeyfile = "client/pubkey.pem"
@@ -69,16 +73,15 @@ def encrypt(payload, type, state, number):
         msg_length += 256
         pubkey = load_publickey(pubkeyfile)
         RSAcipher = PKCS1_OAEP.new(pubkey)
-        etk = RSAcipher.encrypt(key) 
+        etk = RSAcipher.encrypt(key)
 
-
-    # create header
-    header_ver = b'\x01\x00'                               # protocol version 1.0
-    header_typ = type                                      # message type 
-    header_len = msg_length.to_bytes(2, byteorder='big')   # message length (encoded on 2 bytes)
-    header_sqn = (sqn + 1).to_bytes(2, byteorder='big')    # next message sequence number (encoded on 2 bytes)
-    header_rnd = Random.get_random_bytes(6)                # 6-byte long random value
-    header_rsv = b'\x00\x00'                               # 2 reserved bytes
+        # create header
+    header_ver = b'\x01\x00'  # protocol version 1.0
+    header_typ = type  # message type
+    header_len = msg_length.to_bytes(2, byteorder='big')  # message length (encoded on 2 bytes)
+    header_sqn = (sqn + 1).to_bytes(2, byteorder='big')  # next message sequence number (encoded on 2 bytes)
+    header_rnd = Random.get_random_bytes(6)  # 6-byte long random value
+    header_rsv = b'\x00\x00'  # 2 reserved bytes
     header = header_ver + header_typ + header_len + header_sqn + header_rnd + header_rsv
 
     # encrypt the payload and compute the authentication tag over the header and the payload
@@ -91,7 +94,7 @@ def encrypt(payload, type, state, number):
     # save state
     state = "sqn: " + str(sqn + 1) + '\n'
     if not login:
-        state +=  "key: " + key.hex()
+        state += "key: " + key.hex()
     else:
         with open(statefile2, 'a') as sf:
             sf.write("key: " + key.hex())
@@ -103,19 +106,20 @@ def encrypt(payload, type, state, number):
     else:
         return (header + encrypted_payload + authtag)
 
+
 def decrypt(msg, state, number):
     statefile = state + '/rcvstate' + number + '.txt'
 
     login_req = False
 
     # parse the message msg
-    header = msg[0:16]                # header is 16 bytes long
-    header_ver = header[0:2]          # version is encoded on 2 bytes 
-    header_typ = header[2:4]          # type is encoded on 2 bytes
-    header_len = header[4:6]          # msg length is encoded on 2 bytes 
-    header_sqn = header[6:8]          # msg sqn is encoded on 2 bytes 
-    header_rnd = header[8:14]         # random is encoded on 6 bytes 
-    header_rsv = header[14:16]        # rsv is encoded on 2 bytes
+    header = msg[0:16]  # header is 16 bytes long
+    header_ver = header[0:2]  # version is encoded on 2 bytes
+    header_typ = header[2:4]  # type is encoded on 2 bytes
+    header_len = header[4:6]  # msg length is encoded on 2 bytes
+    header_sqn = header[6:8]  # msg sqn is encoded on 2 bytes
+    header_rnd = header[8:14]  # random is encoded on 6 bytes
+    header_rsv = header[14:16]  # rsv is encoded on 2 bytes
 
     if header_typ == LOGIN_REQ:
         login_req = True
@@ -126,27 +130,27 @@ def decrypt(msg, state, number):
         encrypted_payload = msg[16:-268]
         statefile2 = state + '/sndstate' + number + '.txt'
     else:
-        authtag = msg[-12:]               # last 12 bytes is the authtag
-        encrypted_payload = msg[16:-12]   # encrypted payload is between header and authtag
+        authtag = msg[-12:]  # last 12 bytes is the authtag
+        encrypted_payload = msg[16:-12]  # encrypted payload is between header and authtag
 
     # read the content of the state file
     with open(statefile, 'rt') as sf:
-        rcvsqn = int(sf.readline()[len("sqn: "):], base=10) # type should be integer
-        if not login_req :
-            key = bytes.fromhex(sf.readline()[len("key: "):len("key: ")+64]) # type should be byte string
+        rcvsqn = int(sf.readline()[len("sqn: "):], base=10)  # type should be integer
+        if not login_req:
+            key = bytes.fromhex(sf.readline()[len("key: "):len("key: ") + 64])  # type should be byte string
 
     # check the sequence number
     sndsqn = int.from_bytes(header_sqn, byteorder='big')
     if (sndsqn <= rcvsqn):
-        return 0 
+        return 0
 
     if login_req:
         privkeyfile = 'server/keypair.pem'
         keypair = load_keypair(privkeyfile)
         RSAcipher = PKCS1_OAEP.new(keypair)
-        key = RSAcipher.decrypt(etk) 
+        key = RSAcipher.decrypt(etk)
 
-    # verify and decrypt the encrypted payload
+        # verify and decrypt the encrypted payload
     nonce = header_sqn + header_rnd
     AE = AES.new(key, AES.MODE_GCM, nonce=nonce, mac_len=12)
     AE.update(header)
@@ -158,7 +162,7 @@ def decrypt(msg, state, number):
     # save state
     state = "sqn: " + str(sndsqn) + '\n'
     if not login_req:
-        state +=  "key: " + key.hex()
+        state += "key: " + key.hex()
     else:
         with open(statefile2, 'a') as sf:
             key = "key: " + key.hex()

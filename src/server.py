@@ -1,19 +1,20 @@
-import socket
 import _thread
 import os
+import socket
+
 from MTP import decrypt, encrypt
 from command import command_server
+from login import login_server
 
-from login import login_server 
 
 def on_new_client(conn, addr, number):
     print(f"Connected by {addr}")
-    
+
     with open("server/rcvstate" + str(number) + ".txt", "w") as f:
         f.write("sqn: 0\n")
     with open("server/sndstate" + str(number) + ".txt", "w") as f:
         f.write("sqn: 0\n")
-    
+
     logged_in = False
     state = 0
     user = None
@@ -32,15 +33,15 @@ def on_new_client(conn, addr, number):
         else:
             if state == 0:
                 state, current_dir = command_server(conn, number, user, current_dir)
-                            
+
                 if state == -1:
                     break
 
             elif state == 1:
-                #TODO upload
+                # TODO upload
                 pass
             elif state == 2:
-                #TODO download
+                # TODO download
                 pass
 
             """
@@ -58,23 +59,24 @@ def on_new_client(conn, addr, number):
 
             conn.sendall(data)
             """
-    
+
     print(f"Disconnected {addr}")
     os.remove("server/rcvstate" + str(number) + ".txt")
     os.remove("server/sndstate" + str(number) + ".txt")
     conn.close()
 
-def run_server(host, port):
+
+def run_server(port):
     number = 0
     with open("server/number.txt", "w") as f:
         f.write("0")
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind((host, port))
+            s.bind((socket.gethostbyname(socket.gethostname()), port))
             s.listen()
             while True:
                 conn, addr = s.accept()
-                _thread.start_new_thread(on_new_client,(conn,addr,number))
+                _thread.start_new_thread(on_new_client, (conn, addr, number))
                 number += 1
     except KeyboardInterrupt as e:
         for i in range(number):
@@ -85,4 +87,3 @@ def run_server(host, port):
         s = None
     except Exception as e:
         os.remove("server/number.txt")
-
