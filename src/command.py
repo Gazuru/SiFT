@@ -1,5 +1,6 @@
 import base64
 import os
+from typing import Union
 
 from Crypto.Hash import SHA256
 
@@ -68,9 +69,10 @@ def delete(current_dir, params):
     if not os.path.exists(path):
         return "failure\nPath doesn't exist!"
     try:
+        os.chmod(path, 0o777)
         os.remove(path)
         return "success"
-    except IsADirectoryError:
+    except Exception as e:
         try:
             os.rmdir(path)
             return "success"
@@ -106,6 +108,16 @@ def get_message(command, results):
             if results[-1] != res:
                 response += "\n"
         return response
+    elif command == "mkd":
+        try:
+            return results[1]
+        except Exception as e:
+            return None
+    elif command == "del":
+        try:
+            return results[1]
+        except Exception as e:
+            return None
 
 
 def command_req(command, param):
@@ -135,6 +147,10 @@ def command_res(command, params, message, user, current_dir):
         message += results
     elif command == "lst":
         message += lst(current_dir)
+    elif command == "mkd":
+        message += mkd(current_dir, params)
+    elif command == "del":
+        message += delete(current_dir, params)
 
     return message, current_dir
 
