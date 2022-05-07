@@ -41,7 +41,9 @@ def chd(params, current_dir, user):
 
 def lst(current_dir):
     if current_dir is None:
-        return "failure" + '\n' + "Current working directory not found!", current_dir
+        return "failure" + '\n' + "Current working directory not found!"
+    if not os.path.exists("server" + current_dir):
+        return "failure" + '\n' + "Current working directory not found!"
     else:
         response = "success"
         for item in os.listdir("server" + current_dir):
@@ -55,6 +57,8 @@ def lst(current_dir):
 def mkd(current_dir, params):
     if current_dir is None:
         return "failure'\nCurrent working directory not found!"
+    if not os.path.exists("server" + current_dir):
+        return "failure" + '\n' + "Current working directory not found!"
     try:
         os.mkdir(f"server{current_dir}/{params[0]}")
         return "success"
@@ -65,6 +69,8 @@ def mkd(current_dir, params):
 def delete(current_dir, params):
     if current_dir is None:
         return "failure\nCurrent working directory not found!"
+    if not os.path.exists("server" + current_dir):
+        return "failure" + '\n' + "Current working directory not found!"
     path = f"server{current_dir}/{params[0]}"
     if not os.path.exists(path):
         return "failure\nPath doesn't exist!"
@@ -116,8 +122,7 @@ def command_req(command, param):
     if command in ["pwd", "lst"]:
         pass
     else:
-        for parameter in param:
-            message += f"\n{parameter}"
+        message += f"\n{param[0]}"
 
     return message
 
@@ -161,6 +166,7 @@ def command_client(socket, number, user):
             return 0, None
 
     message = command_req(command, param).encode("utf-8")
+    
     data = encrypt(message, COMMAND_REQ, "client", str(number))
     socket.sendall(data)
 
