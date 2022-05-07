@@ -116,7 +116,9 @@ def login_server(conn, number):
 
     if data[2:4] != LOGIN_REQ:
         return False, None
+
     msg = decrypt(data, "server", str(number))
+
     if msg == 0:
         return False, None
 

@@ -1,13 +1,13 @@
+import base64
 import os
 
 from Crypto.Hash import SHA256
-from cv2 import cubeRoot
 
 from MTP import COMMAND_REQ, COMMAND_RES, decrypt, encrypt
 
 
 def pwd(current_dir):
-    if current_dir == None:
+    if current_dir is None:
         return "failure" + '\n' + "Current working directory not found!"
     if not os.path.exists("server" + current_dir):
         return "failure" + '\n' + "Current working directory not found!"
@@ -16,7 +16,7 @@ def pwd(current_dir):
 
 
 def chd(params, current_dir, user):
-    if current_dir == None:
+    if current_dir is None:
         return "failure" + '\n' + "Current working directory not found!", current_dir
     if params[0] != "..":
         if not os.path.exists("server" + current_dir + '/' + params[0]):
@@ -38,23 +38,84 @@ def chd(params, current_dir, user):
             return "success", current_dir
 
 
+def lst(current_dir):
+    if current_dir is None:
+        return "failure" + '\n' + "Current working directory not found!", current_dir
+    else:
+        response = "success"
+        for item in os.listdir("server" + current_dir):
+            item_bytes = item.encode()
+            b64_bytes = base64.b64encode(item_bytes)
+            b64_string = b64_bytes.decode()
+            response += f"\n{b64_string}"
+        return response
+
+
+def mkd(current_dir, params):
+    if current_dir is None:
+        return "failure'\nCurrent working directory not found!"
+    try:
+        os.mkdir(f"server{current_dir}/{params[0]}")
+        return "success"
+    except OSError as e:
+        return f"failure\n{e}"
+
+
+def delete(current_dir, params):
+    if current_dir is None:
+        return "failure\nCurrent working directory not found!"
+    path = f"server{current_dir}/{params[0]}"
+    if not os.path.exists(path):
+        return "failure\nPath doesn't exist!"
+    try:
+        os.remove(path)
+        return "success"
+    except IsADirectoryError:
+        try:
+            os.rmdir(path)
+            return "success"
+        except OSError as e:
+            return f"failure\n{e}"
+
+
+def upl(current_dir, params):
+    # TODO
+    pass
+
+
+def dnl(current_dir, params):
+    # TODO
+    pass
+
+
 def get_message(command, results):
     if command == "pwd":
         return results[1]
-    if command == "chd":
+    elif command == "chd":
         try:
             return results[1]
         except Exception as e:
             return None
+    elif command == "lst":
+        response = ""
+        for res in results[1:]:
+            b64_bytes = res.encode()
+            string_bytes = base64.b64decode(b64_bytes)
+            string = string_bytes.decode()
+            response += f"{string}"
+            if results[-1] != res:
+                response += "\n"
+        return response
 
 
 def command_req(command, param):
     message = command
 
-    if command == "pwd":
+    if command in ["pwd", "lst"]:
         pass
-    if command == "chd":
-        message += '\n' + param
+    else:
+        for parameter in param:
+            message += f"\n{parameter}"
 
     return message
 
@@ -69,9 +130,11 @@ def command_res(command, params, message, user, current_dir):
 
     if command == "pwd":
         message += pwd(current_dir)
-    if command == "chd":
+    elif command == "chd":
         results, current_dir = chd(params, current_dir, user)
         message += results
+    elif command == "lst":
+        message += lst(current_dir)
 
     return message, current_dir
 
@@ -81,7 +144,7 @@ def command_client(socket, number, user):
     try:
         data = command.split(' ')
         command = data[0]
-        param = data[1]
+        param = data[1:]
     except Exception as e:
         param = ""
     if command not in ["pwd", "lst", "chd", "mkd", "del", "upl", "dnl"]:
@@ -104,6 +167,7 @@ def command_client(socket, number, user):
     if data[2:4] != COMMAND_RES:
         return -1, None
     msg = decrypt(data, "client", str(number))
+
     if msg == 0:
         return -1, None
 
@@ -137,6 +201,7 @@ def command_server(conn, number, user, current_dir):
     message = message.encode("utf-8")
 
     data = encrypt(message, COMMAND_RES, 'server', str(number))
+
     conn.sendall(data)
 
     return 0, current_dir
