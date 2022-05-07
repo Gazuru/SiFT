@@ -93,7 +93,7 @@ def dnl(current_dir, params):
 def get_message(command, results):
     if command == "pwd":
         return results[1]
-    elif command == "chd":
+    elif command in ["chd", "mkd", "del"]:
         try:
             return results[1]
         except Exception as e:
@@ -108,16 +108,6 @@ def get_message(command, results):
             if results[-1] != res:
                 response += "\n"
         return response
-    elif command == "mkd":
-        try:
-            return results[1]
-        except Exception as e:
-            return None
-    elif command == "del":
-        try:
-            return results[1]
-        except Exception as e:
-            return None
 
 
 def command_req(command, param):
