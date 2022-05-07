@@ -102,9 +102,9 @@ def encrypt(payload, type, state, number):
         sf.write(state)
 
     if login:
-        return (header + encrypted_payload + authtag + etk)
+        return header + encrypted_payload + authtag + etk
     else:
-        return (header + encrypted_payload + authtag)
+        return header + encrypted_payload + authtag
 
 
 def decrypt(msg, state, number):
@@ -141,7 +141,7 @@ def decrypt(msg, state, number):
 
     # check the sequence number
     sndsqn = int.from_bytes(header_sqn, byteorder='big')
-    if (sndsqn <= rcvsqn):
+    if sndsqn <= rcvsqn:
         return 0
 
     if login_req:

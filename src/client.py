@@ -1,10 +1,8 @@
 import os
 import socket
-from getpass import getpass
 
-from MTP import decrypt, encrypt
 from command import command_client
-from login import login_client, login_req
+from login import login_client
 
 
 def run_client(host, port):

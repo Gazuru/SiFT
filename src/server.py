@@ -2,7 +2,6 @@ import _thread
 import os
 import socket
 
-from MTP import decrypt, encrypt
 from command import command_server
 from login import login_server
 
@@ -23,12 +22,12 @@ def on_new_client(conn, addr, number):
     while True:
         if not logged_in:
             message, user = login_server(conn, number)
-            current_dir = "/home/" + user
-
             if message:
                 logged_in = True
             else:
                 break
+            current_dir = "/home/" + user
+
             print("Waiting for commands from " + user + " on " + str(addr) + "!")
         else:
             if state == 0:
