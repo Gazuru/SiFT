@@ -126,8 +126,8 @@ def command_req(command, param):
     message = command
 
     if command in ["pwd", "lst"]:
-        pass
-    if command == "upl":
+        return message
+    elif command == "upl":
         if os.path.exists(os.getcwd() + '/' + param[0]):
             shutil.copyfile(os.getcwd() + '/' + param[0], "client/" + param[0])
 
@@ -193,7 +193,7 @@ def command_client(socket, number, user):
     message = command_req(command, param)
 
     if message == None:
-        return -1, None
+        return 0, None
 
     message = message.encode("utf-8")
     
@@ -250,6 +250,6 @@ def command_server(conn, number, user, current_dir):
     conn.sendall(data)
 
     if command == "upl" and message.decode("utf-8").split('\n')[2] == "accept":
-        return 1, params[:2]
+        return 1, params[0]
 
     return 0, current_dir

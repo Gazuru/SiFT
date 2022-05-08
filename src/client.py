@@ -3,6 +3,7 @@ import socket
 
 from command import command_client
 from login import login_client
+from upload import upload_client
 
 
 def run_client(host, port):
@@ -48,8 +49,10 @@ def run_client(host, port):
                                 print(param)
                         elif state == 1:
                             print("Uploading...")
-                            print(upl_file)
-                            state = 0
+                            state = upload_client(s, number, upl_file)
+
+                            if state == -1:
+                                break
                         elif state == 2:
                             # TODO download
                             pass
