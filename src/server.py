@@ -31,14 +31,21 @@ def on_new_client(conn, addr, number):
             print("Waiting for commands from " + user + " on " + str(addr) + "!")
         else:
             if state == 0:
-                state, current_dir = command_server(conn, number, user, current_dir)
+                state, param = command_server(conn, number, user, current_dir)
 
                 if state == -1:
                     break
+                elif state == 1:
+                    filename = param[0]
+                    filesize = param[1]
+                else:
+                    current_dir = param
 
             elif state == 1:
-                # TODO upload
-                pass
+                print("Uploading")
+                print(filename)
+                print(filesize)
+                state = 0
             elif state == 2:
                 # TODO download
                 pass

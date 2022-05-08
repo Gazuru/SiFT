@@ -1,6 +1,6 @@
 import base64
 import os
-from typing import Union
+import shutil
 
 from Crypto.Hash import SHA256
 
@@ -87,8 +87,14 @@ def delete(current_dir, params):
 
 
 def upl(current_dir, params):
-    # TODO
-    pass
+    if current_dir is None:
+        return "reject\nCurrent working directory not found!"
+    if not os.path.exists("server" + current_dir):
+        return "reject" + '\n' + "Current working directory not found!"
+    if os.path.exists("server" + current_dir + '/' + params[0]):
+        return "reject" + '\n' + "Already existing file with same name!"
+    else:
+        return "accept"
 
 
 def dnl(current_dir, params):
@@ -99,7 +105,7 @@ def dnl(current_dir, params):
 def get_message(command, results):
     if command == "pwd":
         return results[1]
-    elif command in ["chd", "mkd", "del"]:
+    elif command in ["chd", "mkd", "del", "upl"]:
         try:
             return results[1]
         except Exception as e:
@@ -121,6 +127,23 @@ def command_req(command, param):
 
     if command in ["pwd", "lst"]:
         pass
+    if command == "upl":
+        if os.path.exists(os.getcwd() + '/' + param[0]):
+            shutil.copyfile(os.getcwd() + '/' + param[0], "client/" + param[0])
+
+            with open("client/" + param[0], "rb") as f:
+                data = f.read()
+
+                SHA = SHA256.new()
+                SHA.update(data)
+                hash = SHA.digest()
+
+            message += '\n' + param[0] 
+            message += '\n' + str(os.path.getsize("client/" + param[0]))
+            message += '\n' + hash.hex()
+        else:
+            print("File not found!")
+            return None
     else:
         message += f"\n{param[0]}"
 
@@ -146,6 +169,8 @@ def command_res(command, params, message, user, current_dir):
         message += mkd(current_dir, params)
     elif command == "del":
         message += delete(current_dir, params)
+    elif command == "upl":
+        message += upl(current_dir, params)
 
     return message, current_dir
 
@@ -165,7 +190,12 @@ def command_client(socket, number, user):
             print(command + ": command not found")
             return 0, None
 
-    message = command_req(command, param).encode("utf-8")
+    message = command_req(command, param)
+
+    if message == None:
+        return -1, None
+
+    message = message.encode("utf-8")
     
     data = encrypt(message, COMMAND_REQ, "client", str(number))
     socket.sendall(data)
@@ -191,6 +221,9 @@ def command_client(socket, number, user):
 
     message = get_message(command, data[2:])
 
+    if command == "upl" and data[2] == "accept":
+        return 1, param[0]
+    
     return 0, message
 
 
@@ -215,5 +248,8 @@ def command_server(conn, number, user, current_dir):
     data = encrypt(message, COMMAND_RES, 'server', str(number))
 
     conn.sendall(data)
+
+    if command == "upl" and message.decode("utf-8").split('\n')[2] == "accept":
+        return 1, params[:2]
 
     return 0, current_dir

@@ -38,15 +38,18 @@ def run_client(host, port):
                         print("Login succesful for " + user + "!")
                     else:
                         if state == 0:
-                            state, message = command_client(s, number, user)
+                            state, param = command_client(s, number, user)
 
                             if state == -1:
                                 break
-                            if message != None:
-                                print(message)
+                            elif state == 1:
+                                upl_file = param
+                            elif param != None:
+                                print(param)
                         elif state == 1:
-                            # TODO upload
-                            pass
+                            print("Uploading...")
+                            print(upl_file)
+                            state = 0
                         elif state == 2:
                             # TODO download
                             pass
