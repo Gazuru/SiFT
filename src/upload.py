@@ -1,7 +1,9 @@
 import os
 
-from MTP import UPLOAD_REQ_0, UPLOAD_REQ_1, UPLOAD_RES, decrypt, encrypt
 from Crypto.Hash import SHA256
+
+from MTP import UPLOAD_REQ_0, UPLOAD_REQ_1, UPLOAD_RES, decrypt, encrypt
+
 
 def upload_res(path):
     with open(path, "rb") as f:
@@ -18,6 +20,7 @@ def upload_res(path):
 
     return message
 
+
 def upload_client(socket, number, upl_file):
     size = os.path.getsize("client/" + upl_file)
 
@@ -26,10 +29,10 @@ def upload_client(socket, number, upl_file):
 
     fragements = size // 1024
 
-    if size % 1024 ==0:
+    if size % 1024 == 0:
         fragements -= 1
     for i in range(fragements):
-        message = file[ i * 1024 : (i+1) * 1024]
+        message = file[i * 1024: (i + 1) * 1024]
         data = encrypt(message, UPLOAD_REQ_0, "client", str(number))
         socket.sendall(data)
 
@@ -61,13 +64,14 @@ def upload_client(socket, number, upl_file):
 
     return 0
 
+
 def upload_server(conn, number, current_dir, filename):
     done = False
     while not done:
         data = conn.recv(1052)
         if data[2:4] != UPLOAD_REQ_0 and data[2:4] != UPLOAD_REQ_1:
             return -1
-        
+
         if data[2:4] == UPLOAD_REQ_1:
             done = True
 
