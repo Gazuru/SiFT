@@ -27,16 +27,16 @@ def upload_client(socket, number, upl_file):
     with open("client/" + upl_file, "rb") as f:
         file = f.read()
 
-    fragements = size // 1024
+    fragments = size // 1024
 
     if size % 1024 == 0:
-        fragements -= 1
-    for i in range(fragements):
+        fragments -= 1
+    for i in range(fragments):
         message = file[i * 1024: (i + 1) * 1024]
         data = encrypt(message, UPLOAD_REQ_0, "client", str(number))
         socket.sendall(data)
 
-    message = file[fragements * 1024:]
+    message = file[fragments * 1024:]
     data = encrypt(message, UPLOAD_REQ_1, "client", str(number))
     socket.sendall(data)
 
@@ -69,7 +69,7 @@ def upload_server(conn, number, current_dir, filename):
     done = False
     while not done:
         data = conn.recv(1052)
-        if data[2:4] != UPLOAD_REQ_0 and data[2:4] != UPLOAD_REQ_1:
+        if data[2:4] not in [UPLOAD_REQ_0, UPLOAD_REQ_1]:
             return -1
 
         if data[2:4] == UPLOAD_REQ_1:

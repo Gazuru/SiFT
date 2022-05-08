@@ -4,6 +4,7 @@ import socket
 
 from command import command_server
 from login import login_server
+from src.download import download_server
 from upload import upload_server
 
 
@@ -36,7 +37,7 @@ def on_new_client(conn, addr, number):
 
                 if state == -1:
                     break
-                elif state == 1:
+                elif state in [1, 2]:
                     filename = param
                 else:
                     current_dir = param
@@ -47,8 +48,10 @@ def on_new_client(conn, addr, number):
                 if state == -1:
                     break
             elif state == 2:
-                # TODO download
-                pass
+                state = download_server(conn, number, filename)
+
+                if state == -1:
+                    break
 
             """
             data = conn.recv(2048)
