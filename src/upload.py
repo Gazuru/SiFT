@@ -26,6 +26,8 @@ def upload_client(socket, number, upl_file):
 
     fragements = size // 1024
 
+    if size % 1024 ==0:
+        fragements -= 1
     for i in range(fragements):
         message = file[ i * 1024 : (i+1) * 1024]
         data = encrypt(message, UPLOAD_REQ_0, "client", str(number))
