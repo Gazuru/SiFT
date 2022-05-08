@@ -3,6 +3,7 @@ import socket
 
 from command import command_client
 from login import login_client
+from src.download import download_client
 from upload import upload_client
 
 
@@ -45,6 +46,8 @@ def run_client(host, port):
                                 break
                             elif state == 1:
                                 upl_file = param
+                            elif state == 2:
+                                dnl_file = param
                             elif param != None:
                                 print(param)
                         elif state == 1:
@@ -54,8 +57,9 @@ def run_client(host, port):
                             if state == -1:
                                 break
                         elif state == 2:
-                            # TODO download
-                            pass
+                            #TODO DL
+                            print("Downloading...")
+                            state = download_client(s, number, dnl_file)
                         """
                         message = input()
                         if message =="exit":
