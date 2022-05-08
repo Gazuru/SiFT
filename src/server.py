@@ -4,6 +4,7 @@ import socket
 
 from command import command_server
 from login import login_server
+from upload import upload_server
 
 
 def on_new_client(conn, addr, number):
@@ -36,16 +37,15 @@ def on_new_client(conn, addr, number):
                 if state == -1:
                     break
                 elif state == 1:
-                    filename = param[0]
-                    filesize = param[1]
+                    filename = param
                 else:
                     current_dir = param
 
             elif state == 1:
-                print("Uploading")
-                print(filename)
-                print(filesize)
-                state = 0
+                state = upload_server(conn, number, current_dir, filename)
+
+                if state == -1:
+                    break
             elif state == 2:
                 # TODO download
                 pass

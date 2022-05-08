@@ -150,14 +150,14 @@ def decrypt(msg, state, number):
         RSAcipher = PKCS1_OAEP.new(keypair)
         key = RSAcipher.decrypt(etk)
 
-        # verify and decrypt the encrypted payload
+    # verify and decrypt the encrypted payload
     nonce = header_sqn + header_rnd
     AE = AES.new(key, AES.MODE_GCM, nonce=nonce, mac_len=12)
     AE.update(header)
     try:
         payload = AE.decrypt_and_verify(encrypted_payload, authtag)
     except Exception as e:
-        return 0
+        print("Exception")
 
     # save state
     state = "sqn: " + str(sndsqn) + '\n'
