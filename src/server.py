@@ -4,7 +4,7 @@ import socket
 
 from command import command_server
 from login import login_server
-from src.download import download_server
+from download import download_server
 from upload import upload_server
 
 
@@ -52,22 +52,6 @@ def on_new_client(conn, addr, number):
 
                 if state == -1:
                     break
-
-            """
-            data = conn.recv(2048)
-            if data == b'':
-                break
-
-            data = decrypt(data, "server", str(number))
-            if data == 0:
-                break
-
-            print(f"Received {data!r}")
-        
-            data = encrypt(data, b'\x00\x20',"server", str(number))
-
-            conn.sendall(data)
-            """
 
     print(f"Disconnected {addr}")
     os.remove("server/rcvstate" + str(number) + ".txt")

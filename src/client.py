@@ -3,7 +3,7 @@ import socket
 
 from command import command_client
 from login import login_client
-from src.download import download_client
+from download import download_client
 from upload import upload_client
 
 
@@ -60,6 +60,9 @@ def run_client(host, port):
                         elif state == 2:
                             print("Downloading...")
                             state = download_client(s, number, dnl_file, dnl_size, dnl_hash)
+
+                            if state == -1:
+                                break
 
                 except socket.error as e:
                     break

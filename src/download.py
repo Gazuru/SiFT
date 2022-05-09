@@ -3,7 +3,7 @@ import shutil
 
 from Crypto.Hash import SHA256
 
-from src.MTP import encrypt, DOWNLOAD_RES_0, DOWNLOAD_RES_1, decrypt, DOWNLOAD_REQ
+from MTP import encrypt, DOWNLOAD_RES_0, DOWNLOAD_RES_1, decrypt, DOWNLOAD_REQ
 
 
 def download_server(conn, number, current_dir, dl_file):
@@ -38,7 +38,7 @@ def download_server(conn, number, current_dir, dl_file):
 
 
 def download_client(socket, number, filename, size, hash):
-    command = input(f"File size is {size}. Do you want to proceed? (y/n)\n")
+    command = input(f"File size is {size} bytes. Do you want to proceed? (y/n)\n")
     if not command.lower() in ["y", "n"]:
         print("Wrong input!")
         return 2
@@ -75,6 +75,7 @@ def download_client(socket, number, filename, size, hash):
 
         if computed_hash.hex() != bytes.fromhex(hash).hex() or os.path.getsize(data.name) != int(size, base=10):
             print("File hash or size mismatch!")
+            os.remove(data.name)
             return -1
 
         shutil.copy(data.name, os.getcwd() + "/" + filename)

@@ -133,6 +133,8 @@ def get_message(command, results):
             response += f"{string}"
             if results[-1] != res:
                 response += "\n"
+        if response == "":
+            response = None
         return response
     elif command == "dnl":
         try:
@@ -211,7 +213,9 @@ def command_client(socket, number, user):
             print(command + ": command not found")
             return 0, None
 
-    # dl_req küldése
+    if command in ["chd", "mkd", "del", "upl", "dnl"] and len(param) == 0:
+        print("Parameter missing")
+        return 0, None
 
     message = command_req(command, param)
 
@@ -243,7 +247,6 @@ def command_client(socket, number, user):
     if request_hash != hash:
         return -1, None
 
-    # DL RES megoldása
     message = get_message(command, data[2:])
 
     if command == "upl" and data[2] == "accept":
@@ -267,8 +270,6 @@ def command_server(conn, number, user, current_dir):
 
     command = data[0]
     params = data[1:]
-
-    # DL REQ megoldása
 
     message, current_dir = command_res(command, params, msg, user, current_dir)
 
