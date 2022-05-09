@@ -48,7 +48,7 @@ def on_new_client(conn, addr, number):
                 if state == -1:
                     break
             elif state == 2:
-                state = download_server(conn, number, filename)
+                state = download_server(conn, number, current_dir, filename)
 
                 if state == -1:
                     break

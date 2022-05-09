@@ -98,8 +98,22 @@ def upl(current_dir, params):
 
 
 def dnl(current_dir, params):
-    # TODO
-    pass
+    if current_dir is None:
+        return "reject\nCurrent working directory not found!"
+    if not os.path.exists("server" + current_dir):
+        return "reject" + '\n' + "Current working directory not found!"
+    if not os.path.exists("server" + current_dir + '/' + params[0]):
+        return "reject" + '\n' + "File doesn't exist!"
+    else:
+        with open(f"server/{current_dir}/{params[0]}", "rb") as f:
+            data = f.read()
+
+            SHA = SHA256.new()
+            SHA.update(data)
+            hash = SHA.digest()
+
+            message = "accept" + '\n' + str(os.path.getsize(f.name)) + '\n' + hash.hex()
+        return message
 
 
 def get_message(command, results):
@@ -120,6 +134,11 @@ def get_message(command, results):
             if results[-1] != res:
                 response += "\n"
         return response
+    elif command == "dnl":
+        try:
+            return results[0:3]
+        except Exception as e:
+            return results[1]
 
 
 def command_req(command, param):
@@ -138,15 +157,12 @@ def command_req(command, param):
                 SHA.update(data)
                 hash = SHA.digest()
 
-            message += '\n' + param[0] 
+            message += '\n' + param[0]
             message += '\n' + str(os.path.getsize("client/" + param[0]))
             message += '\n' + hash.hex()
         else:
             print("File not found!")
             return None
-    elif command == "dnl":
-        # TODO dl req megoldása
-        pass
     else:
         message += f"\n{param[0]}"
 
@@ -175,9 +191,7 @@ def command_res(command, params, message, user, current_dir):
     elif command == "upl":
         message += upl(current_dir, params)
     elif command == "dnl":
-        # TODO
-        pass
-
+        message += dnl(current_dir, params)
 
     return message, current_dir
 
@@ -197,7 +211,7 @@ def command_client(socket, number, user):
             print(command + ": command not found")
             return 0, None
 
-    #dl_req küldése
+    # dl_req küldése
 
     message = command_req(command, param)
 
@@ -205,7 +219,7 @@ def command_client(socket, number, user):
         return 0, None
 
     message = message.encode("utf-8")
-    
+
     data = encrypt(message, COMMAND_REQ, "client", str(number))
     socket.sendall(data)
 
@@ -229,15 +243,14 @@ def command_client(socket, number, user):
     if request_hash != hash:
         return -1, None
 
-    #DL RES megoldása
+    # DL RES megoldása
     message = get_message(command, data[2:])
 
     if command == "upl" and data[2] == "accept":
         return 1, param[0]
-    elif command == "dnl":
-        # TODO dl res esetén
-        pass
-    
+    elif command == "dnl" and data[2] == "accept":
+        return 2, [param[0], message[1:]]
+
     return 0, message
 
 
@@ -255,7 +268,7 @@ def command_server(conn, number, user, current_dir):
     command = data[0]
     params = data[1:]
 
-    #DL REQ megoldása
+    # DL REQ megoldása
 
     message, current_dir = command_res(command, params, msg, user, current_dir)
 
@@ -267,8 +280,7 @@ def command_server(conn, number, user, current_dir):
 
     if command == "upl" and message.decode("utf-8").split('\n')[2] == "accept":
         return 1, params[0]
-    elif command == "dnl":
-        # TODO DL res küldése esetén
-        pass
+    elif command == "dnl" and message.decode("utf-8").split('\n')[2] == "accept":
+        return 2, params[0]
 
     return 0, current_dir
