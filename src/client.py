@@ -41,13 +41,14 @@ def run_client(host, port):
                     else:
                         if state == 0:
                             state, param = command_client(s, number, user)
-
                             if state == -1:
                                 break
                             elif state == 1:
                                 upl_file = param
                             elif state == 2:
-                                dnl_file = param
+                                dnl_file = param[0]
+                                dnl_size = param[1][0]
+                                dnl_hash = param[1][1]
                             elif param != None:
                                 print(param)
                         elif state == 1:
@@ -57,21 +58,8 @@ def run_client(host, port):
                             if state == -1:
                                 break
                         elif state == 2:
-                            #TODO DL
                             print("Downloading...")
-                            state = download_client(s, number, dnl_file)
-                        """
-                        message = input()
-                        if message =="exit":
-                            break
-                        s.sendall(encrypt(message.encode('utf-8'), b'\x00\x20', "client", str(number)))
-                        data = s.recv(2048)
-                        data = decrypt(data, "client", str(number))
-                        if data == 0:
-                            break
-
-                        print(f"Received {data!r}")
-                        """
+                            state = download_client(s, number, dnl_file, dnl_size, dnl_hash)
 
                 except socket.error as e:
                     break
