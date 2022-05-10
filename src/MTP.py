@@ -157,7 +157,7 @@ def decrypt(msg, state, number):
     try:
         payload = AE.decrypt_and_verify(encrypted_payload, authtag)
     except Exception as e:
-        print("Exception")
+        return 0
 
     # save state
     state = "sqn: " + str(sndsqn) + '\n'
