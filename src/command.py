@@ -46,11 +46,17 @@ def lst(current_dir):
         return "failure" + '\n' + "Current working directory not found!"
     else:
         response = "success"
+        listing = ""
         for item in os.listdir("server" + current_dir):
-            item_bytes = item.encode()
-            b64_bytes = base64.b64encode(item_bytes)
-            b64_string = b64_bytes.decode()
-            response += f"\n{b64_string}"
+            listing += item
+            if os.listdir("server" + current_dir)[-1] != item:
+                listing += "\n"
+        listing = listing.encode()
+        listing_b64_bytes = base64.b64encode(listing)
+        listing_b64_string = listing_b64_bytes.decode()
+
+        response += '\n' + listing_b64_string
+
         return response
 
 
@@ -126,12 +132,14 @@ def get_message(command, results):
             return None
     elif command == "lst":
         response = ""
-        for res in results[1:]:
-            b64_bytes = res.encode()
-            string_bytes = base64.b64decode(b64_bytes)
-            string = string_bytes.decode()
-            response += f"{string}"
-            if results[-1] != res:
+        b64_bytes = results[1].encode()
+        string_bytes = base64.b64decode(b64_bytes)
+        string = string_bytes.decode()
+        strings = string.split('\n')
+
+        for string in strings:
+            response += string
+            if strings[-1] != string:
                 response += "\n"
         if response == "":
             response = None

@@ -13,7 +13,7 @@ def parse_mode():
     return parser.parse_args().mode
 
 
-HOST = socket.gethostbyname(socket.gethostname())
+HOST = "10.71.0.43"
 PORT = 5150
 
 if __name__ == '__main__':
